@@ -4,6 +4,7 @@ namespace LongMethod
 {
     public class CharacterController : MonoBehaviour
     {
+        // Add serializable fields that allow better control and remove magic numbers from code
         [SerializeField] private float jumpForce = 10;
         [SerializeField] private float movementSpeed = 7;
         [SerializeField] private float rotationSpeed = 45;
@@ -23,24 +24,30 @@ namespace LongMethod
             Rotate();
         }
 
+        // Extract method
         private void Rotate()
         {
             horizontalRotation += rotationSpeed * Input.GetAxis("Mouse X") * Time.deltaTime;
             transform.eulerAngles = new Vector3(0, horizontalRotation, 0);
 
             verticalRotation -= rotationSpeed * Input.GetAxis("Mouse Y") * Time.deltaTime;
+
+            // Use clamp for better readability
             verticalRotation = Mathf.Clamp(verticalRotation, minVerticalRotation, maxVerticalRotation);
             cameraTransform.localEulerAngles = new Vector3(verticalRotation, 0, 0);
         }
 
+        // Extract method
         private void TryJump()
         {
             if (Input.GetButtonDown("Jump"))
                 characterRigidbody.velocity = Vector3.up * jumpForce;
         }
 
+        // Extract method
         private void Move()
         {
+            // Improve local variables naming
             var forwardMovement = Input.GetAxis("Vertical") * transform.forward;
             var sidewaysMovement = Input.GetAxis("Horizontal") * transform.right;
 
@@ -51,10 +58,14 @@ namespace LongMethod
 
         private void Awake()
         {
+            // Execute this only once
             Cursor.lockState = CursorLockMode.Locked;
 
+            // Cache static components
             characterRigidbody = GetComponent<Rigidbody>();
             cameraTransform = Camera.main.transform;
         }
+
+        // Remove unused Start method
     }
 }
