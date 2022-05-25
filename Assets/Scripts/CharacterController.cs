@@ -1,40 +1,71 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace LongMethod
 {
     public class CharacterController : MonoBehaviour
     {
-        void Update()
+        // Add serializable fields that allow better control and remove magic numbers from code
+        [SerializeField] private float jumpForce = 10;
+        [SerializeField] private float movementSpeed = 7;
+        [SerializeField] private float rotationSpeed = 45;
+        [SerializeField] private float maxVerticalRotation = 60;
+        [SerializeField] private float minVerticalRotation = -30;
+
+        private Rigidbody characterRigidbody;
+        private Transform cameraTransform;
+
+        private float horizontalRotation;
+        private float verticalRotation;
+
+        private void Update()
         {
-            // Keeps cursor locked in game window
+            Move();
+            TryJump();
+            Rotate();
+        }
+
+        // Extract method
+        private void Rotate()
+        {
+            horizontalRotation += rotationSpeed * Input.GetAxis("Mouse X") * Time.deltaTime;
+            transform.eulerAngles = new Vector3(0, horizontalRotation, 0);
+
+            verticalRotation -= rotationSpeed * Input.GetAxis("Mouse Y") * Time.deltaTime;
+
+            // Use clamp for better readability
+            verticalRotation = Mathf.Clamp(verticalRotation, minVerticalRotation, maxVerticalRotation);
+            cameraTransform.localEulerAngles = new Vector3(verticalRotation, 0, 0);
+        }
+
+        // Extract method
+        private void TryJump()
+        {
+            if (Input.GetButtonDown("Jump"))
+                characterRigidbody.velocity = Vector3.up * jumpForce;
+        }
+
+        // Extract method
+        private void Move()
+        {
+            // Improve local variables naming
+            var forwardMovement = Input.GetAxis("Vertical") * transform.forward;
+            var sidewaysMovement = Input.GetAxis("Horizontal") * transform.right;
+
+            var movementDirection = (forwardMovement + sidewaysMovement).normalized;
+
+            transform.position += movementDirection * Time.deltaTime * movementSpeed;
+        }
+
+        private void Awake()
+        {
+            // Execute this only once
             Cursor.lockState = CursorLockMode.Locked;
 
-            var mov = (Input.GetAxis("Horizontal") * transform.right + Input.GetAxis("Vertical") * transform.forward) .normalized;
-            transform.position += mov * Time.deltaTime * 7;
-
-            if (Input.GetButtonDown("Jump"))
-                GetComponent<Rigidbody>().velocity = Vector3.up * 10;
-
-
-
-            transform.localRotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y + 45 * Input.GetAxis("Mouse X") * Time.deltaTime, 0);
-
-            var t = transform.Find("Main Camera").transform;
-            var xRot = t.localRotation.eulerAngles.x - 45 * Input.GetAxis("Mouse Y") * Time.deltaTime;
-            if (xRot > 35) xRot = 35; else if (xRot < 10) xRot = 10;
-            t.localRotation = Quaternion.Euler(xRot, 0, 0);
-
-
+            // Cache static components
+            characterRigidbody = GetComponent<Rigidbody>();
+            cameraTransform = Camera.main.transform;
         }
 
-        void Awake()
-        {
-
-        }
-
-        void Start() {}
+        // Remove unused Start method
     }
 }
